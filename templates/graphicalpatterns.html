@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+
+<head>
+     {% include "head.html" %}
+    
+</head>
+
+
+<body>
+ {% include "navbar.html" %}
+ <h1>Graphical patterns</h1>
+ 
+ 
+ <table class="table table-hover" >
+     <tr>
+      <th>Code</th>
+      <th>Name</th>
+      <th>Yahoo Data</th>
+      <th>Borsa Italiana</th>
+      <th>Patterns Bullish</th>
+      <th>Patterns Bearish</th>
+      <th>Value</th>
+      <th>Diff</th>
+      <th>grafico</th>
+      <th></th>
+     </tr>
+     {% for stock in stocks %}          
+      <tr>
+      <td>{{ stock.reuters }}</td>
+      <td>{{ stock.name }}</td>
+      <td><a href="https://it.finance.yahoo.com/quote/{{stock.bloomberg}}?p={{stock.bloomberg}}" target="_blank" rel="noopener noreferrer">{{stock.bloomberg}}</a> </td>
+      <td><a href="{{stock.borsaitaliana}}" target="_blank" rel="noopener noreferrer">{{stock.reuters}}</a> </td>
+      <td>{{ stock.patternsBullish }} </td>
+      <td>{{ stock.patternsBearish}} </td>
+      <td>{{ stock.value }} </td>
+       <td><a href="{stock.grafico}" target="popup" ><img src="{{ stock.grafico }}" width="600" height="300"
+           onclick="window.open('{{ stock.grafico }}','popup','width=600,height=600'); return false;" > </a> </td>
+      </td>
+      </tr>    
+     {% endfor %}
+  </table>
+ 
+ {% include "body.html" %}
+ 
+ 
+ <script>
+     $(function(){
+            
+         }
+         );
+                
+ 
+ </script>
+</body>
+</html>
+

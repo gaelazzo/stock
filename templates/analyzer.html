@@ -1,0 +1,293 @@
+<!doctype html>
+<html>
+
+<head>
+
+{% include "head.html" %}
+</head>
+
+<body>
+
+ {% include "navbar.html" %}
+ <h1>Stock Calculator</h1>
+ 
+ <div class="container">
+ 
+
+  <div class = "row">
+ 
+ <div class="col-sm">
+       <div class="dropdown show">
+            <a class="btn btn-secondary dropdown-toggle"  role="button" id="dropDownGroups" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              {{data.currentList}}
+            </a>
+              
+      <div class="dropdown-menu" aria-labelledby="dropDownGroups">
+                {% for listCode  in data.list %}    
+                   <li>
+                       <a class="dropdown-item clickGroups" >{{listCode}}</a>
+                   </li>
+                {% endfor %}
+               
+            </div> <!---  dropdown menu  -->
+            
+     </div><!---  dropdown show  -->
+
+ </div>     
+ <!--/div> <!--- row   !-->
+ 
+ 
+ <!--div class = "row"-->
+ <div class="col-sm">
+       <div class="dropdown show">
+            <a class="btn btn-secondary dropdown-toggle"  role="button" id="dropDownTickers" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Tickers
+            </a>
+              
+            <div class="dropdown-menu" aria-labelledby="dropDownTickers">
+                {% for t  in data.tickers %}    
+                   <li>
+                       <a class="dropdown-item clickTickers" >{{t.bloomberg}}</a>
+                   </li>
+                {% endfor %}
+               
+            </div> <!---  dropdown menu  -->
+            
+     </div><!---  dropdown show  -->
+ </div>
+      
+     <div class="col-sm">
+        <label for="stopLossPerc" class="form-label">% StopLoss</label>
+        <input type="text" class="form-control" name="stopLossPerc"  id="stopLossPerc">
+    </div>
+     <div class="col-sm">
+        <label for="takeProfitPerc" class="form-label">% Take Profit</label>
+        <input type="text" class="form-control" name="takeProfitPerc"  id="takeProfitPerc" >
+    </div>
+    
+     
+ </div> <!--- row   -->
+ 
+    
+ 
+ <div class"row">
+                    Frequency
+                    <div class="form-check form-check-inline" id= "frequency">
+                      
+                      {% set freq =  ["1m","5m", "15m", "30m", "45m", "1h","5h", "1d", "1wk", "1mo"]  %}
+                      {% for c in range(freq|length)  %}          
+                        <input type="radio" class="btn-check adjustPeriod" data-value="{{freq[c]}}" name="frequency" id="frequency{{c}}" autocomplete="off" {% if _freq==freq[c] %} checked {% endif %}>
+                        <label class="btn btn-secondary" for="frequency{{c}}">{{freq[c]}}</label>
+                      {% endfor %}          
+                    </div>  
+            
+     
+                     Period
+                     <div class="form-check form-check-inline"  id= "period">
+                      
+                      {% set period = ["1d","1wk", "1mo", "1y", "3y","5y", "10y", "max"] %}
+                      {% for c in range(period|length)   %}                 
+                        <input type="radio" class="btn-check adjustFrequency" data-value="{{period[c]}}" name="period" id="period{{c}}" autocomplete="off" {% if _period==period[c] %} checked {% endif %}>
+                        <label class="btn btn-secondary" for="period{{c}}">{{period[c]}}</label>
+
+                      {% endfor %}          
+                    </div>  
+        
+</div> <!--- row   -->
+ 
+ <div class = "row">
+ 
+   
+   <div>
+     <br/>
+         <button type="button" id = "btnEvaluate" class="btn btn-primary">Evaluate</button>
+          <input type="hidden" class="form-control" name="tickerCode"  id="tickerCode" >
+          <input type="hidden" class="form-control" name="frequencyValue"  id="frequencyValue" >
+          <input type="hidden" class="form-control" name="periodValue"  id="periodValue" >
+    </div>
+ 
+ 
+
+
+
+</div> <!--- row   -->
+ 
+ <div class="row" id="dataDiv">
+     <table id="dataFrameTable">
+
+    </table>
+ </div>
+</div> <!--- container   -->
+  
+ 
+    
+ 
+  
+
+
+
+
+ {% include "body.html" %}
+ 
+ 
+ <script>
+ $(".dropdown-menu li a").click(function(){
+  $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
+  $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
+});
+
+ $("#btnEvaluate").click(async function(){
+   let listCode= $("#tickerCode").val()
+   //window.location.href = "/analyzer/evaluateTickerData?listCode=" + listCode
+   let response = await fetch("/analyzer/evaluateTickerData?bloomberg=" + listCode+
+                               "&frequency="+$("#frequencyValue").val()+
+                               "&period="+$("#periodValue").val()+
+                               "&sl="+$("#stopLossPerc").val()+
+                               "&tp="+$("#takeProfitPerc").val()
+                               );
+      if (response.ok) {
+                let data = await response.json();                               
+                let table = DataFrameToTable(data.data,{id:"dataFrameTable"})
+                $("#dataFrameTable").html(table);
+                $("#dataFrameTable").show();
+                //$("#").append(table)
+      }
+ });
+
+
+ $(".clickGroups").click(async function(){
+         let listCode= this.innerText // $("#dropDownGroups").data("value")
+         window.location.href = "/analyzer?listCode=" + listCode
+         
+ });
+ 
+ $(".clickTickers").click(async function(){
+         let tickerCode= this.innerText // $("#dropDownGroups").data("value")
+         $("#tickerCode").val(tickerCode);
+         //let data = await fetch("/data/listGraph?listCode=" + listCode);
+ });
+ 
+ 
+ $(".adjustFrequency").click(adjustFrequency);
+ 
+ $(".adjustPeriod").click(adjustPeriod);
+ 
+ /* period =["1d","1wk", "1mo", "1y", "3y","5y", "10y", "max"]  */
+ function adjustPeriod(){
+     frequency = $(this).data("value")
+     //map frequency => default period
+     let map = {"1m":"1h",
+            "5m":"4h",
+            "15m":"2d",
+            "30m":"4d",
+            "45m":"6d",
+            "1h":"8d",
+            "4h":"1mo",
+            "5h":"2mo",
+            "1d":"3mo",
+            "1wk":"1y",
+            "1mo":"5y"
+     }
+     $("#frequencyValue").val(frequency);
+ }
+ 
+ 
+ /* ["1m","5m", "15m", "30m", "45m", "1h", "1d", "5d", "1wk", "1mo", "3mo"] */
+
+ function adjustFrequency(){
+     period = $(this).data("value")
+       //map period  => default frequency
+     let map = {"1d":"10m",
+            "1wk":"1h",
+            "1mo":"5h",
+            "1y":"1wk",
+            "3y":"2wk",
+            "5y":"1mo",
+            "10y":"1mo",
+            "max":"1mo"
+     }
+     $("#periodValue").val(period);
+ }
+ 
+ 
+ var DataFrameToTable = function (df, options) {
+
+    
+    var table = $('<table  id="'+options.id+'" class="table  table-striped"/>'),
+        thead,
+        tfoot,
+        tBody,
+        rows = [],
+        row,
+        i,
+        j,
+        tableId
+        defaults = {
+            th: true, // should we use th elemenst for the first row
+            thead: true, //should we include a thead element with the first row
+            tfoot: false, // should we include a tfoot element with the last row
+            attrs: {} // attributes for the table element, can be used to            
+        };
+
+    options = $.extend(defaults, options);
+
+    table.attr(options.attrs);
+    let nCol= df.columns.length;
+    
+    if (options.th){
+     row = $('<tr />');
+     for (j = 0; j < nCol; j = j + 1) {
+         row.append($('<th />').html(df.columns[j]));
+      }
+      rows.push(row);
+    }
+    
+    // loop through all the rows, we will deal with tfoot and thead later
+    for (i = 0; i < df.data.length; i = i + 1) {
+            row = $('<tr />');
+            for (j = 0; j < nCol; j = j + 1) {
+                row.append($('<td />').html(df.data[i][j]));
+             }
+            rows.push(row);
+
+    }
+     
+    
+
+    // if we want a thead use shift to get it
+    if (options.thead) {
+        thead = rows.shift();
+        thead = $('<thead />').append(thead);
+        table.append(thead);
+    }
+
+    // if we want a tfoot then pop it off for later use
+    if (options.tfoot) {
+        tfoot = rows.pop();
+    }
+    tBody = $('<tbody />')
+    // add all the rows
+    for (i = 0; i < rows.length; i = i + 1) {
+        tBody.append(rows[i]);
+    }
+    table.append(tBody);
+
+    // and finally add the footer if needed
+    if (options.tfoot) {
+        tfoot = $('<tfoot />').append(tfoot);
+        table.append(tfoot);
+    }
+    
+
+    return table;
+};
+
+
+ </script>
+ 
+</body>
+
+
+
+</html>
+

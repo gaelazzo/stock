@@ -1,0 +1,194 @@
+<!doctype html>
+<html>
+
+<head>
+    {% include "head.html" %}
+
+
+  
+   
+</head>
+
+
+<body>
+
+{% include "navbar.html" %}
+
+
+ <h1>Portfolio</h1>
+ <table class="table">
+     <tr>
+        <th class="num"><h2>Market value</h2></th>
+        <th class="num"><h2>total P/L</h2></th>
+        <th class="num"><h2>daily P/L</h2></th>
+        <th class="num"></th>
+     </tr>
+     <tr>          
+      <td class="num "><h4>€ {{ total.totalValue }}</h4></td>
+      <td class="num {% if total.totalPL>0 %}greenFont {% endif %} {% if total.totalPL<0 %}redFont {% endif %} "><h4>{{ total.totalPL }} € / {{ total.totalPercPL}} %</h4></td>
+      <td class="num {% if total.dailyPL>0 %}greenFont {% endif %} {% if total.dailyPL<0 %}redFont {% endif %} "><h4>{{ total.dailyPL }} € / {{ total.dailyPercPL}} %</h4></td>
+      <td class="num "><h4></h4></td>
+     </tr>
+ </table>   
+  
+ <table id="portfolioTable" class="table  table-striped" data-toggle="table">
+  <thead>
+     <tr>
+      <th>Nome</th>
+      <th>Sym</th>
+      <th class="num">Q.</th>
+      <th class="num">Buy Price</th>
+      <th class="num">Market value</th>
+      <th class="num">Prev. Price</th>
+      <th class="num">Curr. Price</th>
+      <th class="num">% day</th>
+      <th class="num">Diff day</th>
+      <th class="num">% total</th>
+      <th class="num">Diff total</th>
+      <th></th>
+     </tr>
+     </thead>
+     <tbody>
+     {% for stock in stocks %}          
+      <tr>
+      <td><a href="/filteredHistory?reuters={{stock.reuters}}">{{ stock.name }}</a></td>
+      <td>{{ stock.reuters }}</td>
+      <td class="num">{{ stock.q }}</td>
+      <td class="num">{{ stock.buyprice}} €</td>
+      <td class="num">{{ stock.marketValue}}K€</td>
+      <td class="num">{{ stock.prevPrice}} €</td>
+      <td class="num">{{ stock.currPrice}} €</td>
+      <td class="{{stock.dayColor}} num">{{ stock.percDay }} %</td>
+      <td class="{{stock.dayColor}} num">{{ stock.diffDay }} €</td>
+      <td class="{{stock.totColor}} num">{{ stock.percTotal }} %</td>
+      <td class="{{stock.totColor}} num">{{ stock.diffTotal }} €</td>
+      </tr>    
+     {% endfor %}
+     </tbody>
+  </table>
+
+  <button class="btn btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#openDiv" aria-expanded="false" aria-controls="openDiv">
+    Buy
+  </button>
+  
+<div class="collapse" id="openDiv">
+  <div class="card card-body">
+  
+ <form action="/portfolio/addPosition" method="post">
+    <div class="row" >
+      <div class="col-sm">
+        <label for="reuters" class="form-label">Reuters code</label>
+        <input type="text" class="form-control" name="reuters" id="reuters" aria-describedby="Code" value="{{currStock.reuters}}" hint="GASI" >
+      </div>
+      
+      
+      <div class="col-sm">
+        <label for="q" class="form-label">Quantity</label>
+        <input type="text" class="form-control" name="q"  id="q" value="{{ currStock.q }}">
+      </div>
+      
+      <div class="col-sm">
+        <label for="buyprice" class="form-label">Buy Price</label>
+        <input type="text" class="form-control" name="buyprice"  id="buyprice" value="{{ currStock.buyprice }}">
+      </div>
+    
+      <div class="col-sm">
+        <label for="buydate" class="form-label">Buy Date</label>
+        <input type="text" class="form-control" name="buydate"  id="buydate" value="{{ currStock.buydate }}">
+      </div>
+      <div class="col-sm">
+      <br/>
+       <input type="submit" class="btn btn-primary" name ='buy' value="buy">
+       </div>
+     </div>
+ </form>
+ 
+ </div>
+ </div>
+ 
+ 
+  <button class="btn btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#closeDiv" aria-expanded="false" aria-controls="closeDiv">
+    Sell
+  </button>
+  
+  <div class="collapse" id="closeDiv">
+  <div class="card card-body">
+  
+ <form action="/portfolio/closePosition" method="post">
+    <div class="row" >
+      <div class="col-sm">
+        <label for="reutersSellCode" class="form-label">Reuters code</label>
+        <input type="text" class="form-control" name="reutersSellCode" id="reutersSellCode" aria-describedby="Code" value="{{currStock.reuters}}" hint="GASI" >
+      </div>
+      
+      
+      <div class="col-sm">
+        <label for="qSell" class="form-label">Quantity</label>
+        <input type="text" class="form-control" name="qSell"  id="qSell" value="{{ currStock.q }}">
+      </div>
+      
+      <div class="col-sm">
+        <label for="sellprice" class="form-label">Sell Price</label>
+        <input type="text" class="form-control" name="sellprice"  id="sellprice" value="{{ currStock.sellprice }}">
+      </div>
+    
+      <div class="col-sm">
+        <label for="selldate" class="form-label">Sell Date</label>
+        <input type="text" class="form-control" name="selldate"  id="selldate" value="{{ currStock.selldate }}">
+      </div>
+    
+     <div class="col-sm">
+     <br/>
+         <input type="submit"  class="btn btn-primary" name ='sell' value="sell">
+    </div>
+ </div>
+</form>
+
+ </div> 
+ </div>
+ 
+ <!--script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script-->
+
+{% include "body.html" %}
+
+
+ 
+ 
+ <script>
+     $(function(){
+            //onclick="toggler('myContent');
+              
+             $('#portfolioTable')
+                .on('click-row.bs.table', function (e, row, $element) {              
+                $("#reutersSellCode").val(row[1].trim());
+                $("#qSell").val(row[2]);
+                $("#sellprice").val(row[6].replace('€', '').replace(",","."));
+                var today = new Date();
+                let month = String(today.getMonth() + 1);
+                let day = String(today.getDate());
+                const year = String(today.getFullYear());
+                if (month.length < 2) month = '0' + month;
+                if (day.length < 2) day = '0' + day;
+                var date = day+"/"+month+"/"+year;
+                $("#selldate").val(date);
+                
+
+                $("#reuters").val(row[1].trim());
+                $("#q").val(row[2]);
+                $("#buyprice").val(row[6].replace('€', '').replace(",","."));
+                
+                $("#buydate").val(date);
+                                
+            })
+              
+           
+          
+         
+         });
+    
+   
+                
+ 
+ </script>
+</body>
+</html>

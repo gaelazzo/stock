@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+
+<head>
+  {% include "head.html" %}
+  
+
+</head>
+
+
+<body>
+
+ {% include "navbar.html" %}
+
+ <div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="selectDates" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Date range
+  </button>
+  <div class="dropdown-menu" aria-labelledby="selectDates">
+    <a class="dropdown-item" href="/openPositions?range=day">Today</a>
+    <a class="dropdown-item" href="/openPositions?range=yesterday">Yesterday</a>
+    <a class="dropdown-item" href="/openPositions?range=week">Last week</a>
+    <a class="dropdown-item" href="/openPositions?range=month">Last month</a>
+    <a class="dropdown-item" href="/openPositions?range=month3">Last 3 months</a>
+    <a class="dropdown-item" href="/openPositions?range=month4">Last 4 month</a>
+    <a class="dropdown-item" href="/openPositions?range=month6">Last 6 month</a>
+    <a class="dropdown-item" href="/openPositions?range=year">Last year</a>
+    <a class="dropdown-item" href="/openPositions">All</a>
+  </div>
+</div>
+ 
+ 
+ <h1>Operations</h1>
+  <table class="table">
+   <thead>
+     <tr  >
+        <th class="num"><h2>Total P/L</h2></th>
+        <th class="num"><h2>Tot.commissions</h2></th>
+        <th class="num"><h2>Tot.tobin</h2></th>
+        <th class="num"><h2>Net total</h2></th>
+        <th class="num"><h2></h2></th>
+     </tr>
+     </thead>
+     <tbody>
+     <tr>          
+      <td class="num "><h4>€ {{ total.closedPL }}</h4></td>
+      <td class="num "><h4>€ {{ total.comm }}</h4></td>
+      <td class="num "><h4>€ {{ total.tobin }}</h4></td>
+      <td class="num "><h4>€ {{ total.net }}</h4></td>
+     </tr>
+     </tbody>
+ </table>   
+ 
+  
+ <table class="table table-hover  table-striped"  >
+    <thead style="position: sticky;top: 0" class="table-dark">
+      <tr>
+      <th class="header" scope="col">Nome</th>
+      <th class="header" scope="col">Sym</th>
+      <th class="header num" scope="col">Q.</th>
+      
+      <th class="header num" scope="col">Buy Date</th> 
+      <th class="header num" scope="col">Buy Price</th>
+      
+      
+      <th class="header num" scope="col">Curr Price</th>            
+      <th class="num">Comm.</th>
+      
+      
+      <th class="header num" scope="col">P/L %</th>
+      <th class="header num" scope="col">P/L</th>
+      
+      <th class="header num" scope="col">Tobin</th>
+      
+     </tr>
+     </thead>
+    
+     <tbody>
+     {% for stock in stocks %}          
+      <tr>
+      <td><a href="/stockTechnicalDetail?reuters={{stock.reuters}}">{{ stock.name }}</a></td>
+      <td><a href="/filteredHistory?reuters={{stock.reuters}}" >{{ stock.reuters }}</a></td>
+      <td class="num">{{ stock.q }}</td>
+      
+      <td class="num">{{ stock.buydate|format_datetime}} </td>     
+      <td class="num">{{ stock.buyprice}}€</td>      
+      
+      <td class="num">{{ stock.sellprice }}€</td>      
+      <td class="num">{{ stock.buycomm}} </td>
+      
+      <td class="{% if stock.sellprice>stock.buyprice %}greenFont {% endif %} {% if stock.sellprice<stock.buyprice %}redFont {% endif %}  num">{{ stock.percPL }}%</td>
+      <td class="{% if stock.sellprice>stock.buyprice %}greenFont {% endif %} {% if stock.sellprice<stock.buyprice %}redFont {% endif %} num">{{ stock.PL }}€</td>
+      
+      <td class="num">{% if stock.tobin!= 0 %}{{stock.tobin}}€{% endif %}  </td>
+      
+      </tr>    
+     {% endfor %}
+     </tbody>
+  </table>
+   {% include "body.html" %}
+
+
+ <script>
+     $(function(){
+            
+         }
+         );
+
+    function apriTech(url) { 
+        newin = window.open(url,'Tecnical info','scrollbars=no,resizable=yes, width=600,height=400,status=no,location=no,toolbar=no'); } 
+    </script>                
+ 
+ </script>
+</body>
+</html>

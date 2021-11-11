@@ -1,0 +1,40 @@
+ <h1>Technical Analysis for {{ stock.name }}</h1>
+
+ 
+ <table class="table" >
+     <thead>
+     <tr>
+      <th>Patterns</th>
+      <th>Yahoo Data</th>
+      <th>Borsa Italiana</th>
+      <th>Support</th>
+      <th>prev.Value</th>
+      <th>Value</th>
+      <th>Resistance</th>
+      <th>Strength</th>
+      <th>volatility</th>
+      <th>Diff</th>
+      <th>MinMax(day)</th>
+      <th>grafico</th>
+      <th></th>
+     </tr>
+     </thead>
+     <tbody>
+      <tr>
+      <td>{{ stock.patterns }} </td>
+      <td><a href="https://it.finance.yahoo.com/quote/{{stock.bloomberg}}?p={{stock.bloomberg}}" target="_blank" rel="noopener noreferrer">{{stock.bloomberg}}</a> </td>
+      <td><a href="{{stock.borsaitaliana}}" target="_blank" rel="noopener noreferrer">{{stock.reuters}}</a> </td>
+      <td>{{ stock.support }}</td>
+      <td>{{ stock.prevValue }} </td>
+      <td>{{ stock.value }} </td>
+      <td>{{ stock.resistance }}</td>
+      <td>{{ stock.strength }}</td>
+      <td>{{ stock.volatility }}</td>
+      <td>{{ stock.diff }} %</td>
+      <td>{{ stock.dayRange }}</td>
+       <td><a href="{stock.grafico}" target="popup" ><img src="{{ stock.grafico }}" width="600" height="300"
+           onclick="window.open('{{ stock.grafico }}','popup','width=600,height=600'); return false;" > </a> </td>
+      </td>
+      </tr>    
+     </tbody>
+  </table>

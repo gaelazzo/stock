@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+
+<head lang="en">
+  {% include "head.html" %}
+  
+  
+</head>
+
+
+<body>
+
+
+ {% include "navbar.html" %}
+
+ <div class="dropdown">
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="selectDates" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Date range
+  </button>
+  <div class="dropdown-menu" aria-labelledby="selectDates">
+   <a class="dropdown-item" href="/history?range=difftoday">Diff Today</a>
+    <a class="dropdown-item" href="/history?range=day">Today</a>
+    <a class="dropdown-item" href="/history?range=yesterday">Yesterday</a>
+    <a class="dropdown-item" href="/history?range=week">Last week</a>
+    <a class="dropdown-item" href="/history?range=month">Last month</a>
+    <a class="dropdown-item" href="/history?range=month3">Last 3 months</a>
+    <a class="dropdown-item" href="/history?range=month4">Last 4 month</a>
+    <a class="dropdown-item" href="/history?range=month6">Last 6 month</a>
+    <a class="dropdown-item" href="/history?range=year">Last year</a>
+    <a class="dropdown-item" href="/history">All</a>
+  </div>
+</div>
+ 
+ {% if stock is defined %}
+  {% include "technicalDetail_table.html" %}
+ {% endif %}
+ 
+ <h1>Operations</h1>
+  <table class="table">
+   <thead>
+     <tr>
+        <th class="num"><h2>Total P/L</h2></th>
+        <th class="num"><h2>Tot.commissions</h2></th>
+        <th class="num"><h2>Tot.tax</h2></th>
+        <th class="num"><h2>Tot.Tobin Tax</h2></th>
+        <th class="num"><h2>Net total</h2></th>
+        <th class="num"><h2>Tot.credits</h2></th>
+         {% if dataRange is defined and dataRange == "difftoday" %}   <th class="num"><h2>Today Diff</h2></th>      {% endif %}      
+        <th class="num"><h2></h2></th>
+     </tr>
+     </thead>
+     <tbody>
+     <tr>          
+      <td class="num "><h4>€ {{ total.closedPL }}</h4></td>
+      <td class="num "><h4>€ {{ total.comm }}</h4></td>
+      <td class="num "><h4>€ {{ total.tax }}</h4></td>
+      <td class="num "><h4>€ {{ total.tobin }}</h4></td>
+      <td class="num "><h4>€ {{ total.net }}</h4></td>
+      <td class="num "><h4>€ {{ total.credits }}</h4></td>      
+       {% if dataRange is defined and dataRange == "difftoday" %}    <td class="num "><h4>€ {{ total.diff }}</h4></td>           {% endif %}   
+     </tr>
+     </tbody>
+ </table>   
+ 
+  
+ <table class="table table-hover  table-striped"  >
+    <thead style="position: sticky;top: 0" class="table-dark">
+      <tr>
+      <th class="header" scope="col">Nome</th>
+      <th class="header" scope="col">Sym</th>
+      <th class="header num" scope="col">Q.</th>
+      {% if dataRange is not defined or dataRange != "difftoday" %}  <th class="header num" scope="col">Buy Date</th> {% endif %}      
+      <th class="header num" scope="col">Buy Price</th>
+      <th class="header num" scope="col" >Sell Price</th>
+      {% if dataRange is not defined or dataRange != "difftoday" %} <th class="header num" scope="col">Sell Date</th>      {% endif %}      
+      {% if dataRange is defined and dataRange == "difftoday" %}   <th class="header num" scope="col">Curr Price</th>      {% endif %}      
+      {% if dataRange is defined and dataRange == "difftoday" %}   <th class="header num" scope="col">Total diff</th>      {% endif %}            
+      
+      {% if dataRange is not defined or dataRange != "difftoday" %}
+      <th class="num">Buy cm</th>
+      <th class="num">Sell cm</th>
+      <th class="header num" scope="col">Comm.</th>
+      {% endif %}
+      
+      <th class="header num" scope="col">P/L %</th>
+      <th class="header num" scope="col">P/L</th>
+      {% if dataRange is not defined or dataRange != "difftoday" %}
+      <th class="header num" scope="col">Tax</th>
+      <th class="header num" scope="col">Tobin</th>
+      <th class="header num" scope="col">Credits</th>
+      {% endif %}
+     </tr>
+     </thead>
+    
+     <tbody>
+     {% for stock in stocks %}          
+      <tr>
+      <td><a href="/stockTechnicalDetail?reuters={{stock.reuters}}">{{ stock.name }}</a></td>
+      <td><a href="/filteredHistory?reuters={{stock.reuters}}" >{{ stock.reuters }}</a></td>
+      <td class="num">{{ stock.q }}</td>
+      {% if dataRange is not defined or dataRange != "difftoday" %}      <td class="num">{{ stock.buydate|format_datetime}} </td>     {% endif %}   
+      <td class="num">{{ stock.buyprice}}€</td>
+      <td class="num">{{ stock.sellprice}}€</td>
+      {% if dataRange is not defined or dataRange != "difftoday" %}      <td class="num">{{ stock.selldate|format_datetime}} </td>    {% endif %}   
+      {% if dataRange is defined and dataRange == "difftoday" %}
+        <td class="{% if stock.sellprice>stock.currprice %}greenFont {% endif %} {% if stock.sellprice<stock.currprice %}redFont {% endif %} num">{{ stock.currprice}}€ </td>                
+        <td class="{% if stock.sellprice>stock.currprice %}greenFont {% endif %} {% if stock.sellprice<stock.currprice %}redFont {% endif %} num">{{ stock.diffTotal}}€ </td>     
+      {% endif %}      
+      {% if dataRange is not defined or dataRange != "difftoday" %}
+      <td class="num">{{ stock.buycomm}} </td>
+      <td class="num">{{ stock.sellcomm}} </td>
+      <td class="num">{{ stock.totcomm}} </td>
+      {% endif %}
+      <td class="{% if stock.sellprice>stock.buyprice %}greenFont {% endif %} {% if stock.sellprice<stock.buyprice %}redFont {% endif %}  num">{{ stock.percPL }}%</td>
+      <td class="{% if stock.sellprice>stock.buyprice %}greenFont {% endif %} {% if stock.sellprice<stock.buyprice %}redFont {% endif %} num">{{ stock.PL }}€</td>
+      {% if dataRange is not defined or dataRange != "difftoday" %}
+      <td class="num">{% if stock.tax != 0 and stock.tax !=0.0 %}  {{ stock.tax}}€ {% endif %}  </td>
+      <td class="num">{% if stock.tobin!= 0 %}{{stock.tobin}}€{% endif %}  </td>
+      <td class="num">{% if stock.credits != "0"   %}  {{ stock.credits}}€ {% endif %}  </td>
+      {% endif %}
+      </tr>    
+     {% endfor %}
+     </tbody>
+  </table>
+   {% include "body.html" %}
+
+
+ <script>
+     $(function(){
+            
+         }
+         );
+
+    function apriTech(url) { 
+        newin = window.open(url,'Tecnical info','scrollbars=no,resizable=yes, width=600, height=400,status=no,location=no,toolbar=no'); }
+    </script>                
+ 
+ </script>
+</body>
+</html>

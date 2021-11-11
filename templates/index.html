@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+
+<head>
+
+{% include "head.html" %}
+</head>
+
+<body>
+
+ {% include "navbar.html" %}
+ <h1>Stock Calculator</h1>
+ 
+ 
+ <div>
+ 
+ <button onclick="window.location.href='/restart'">Rileggi dati</button>
+ </div>
+ 
+ 
+  <div>
+  <button onclick="window.location.href='/stocks/readDaily'">Read Daily Data</button>
+ </div>
+ 
+</form>
+
+
+
+ 
+  
+    
+  
+ 
+   
+    
+ 
+    
+  <div class="shadow-lg p-3 mb-5 bg-white rounded">
+   <label class="input-group-text" for="uploadDiv">Import open positions</label>
+   
+    
+    <div class="row" id= "uploadOpenDiv">
+      <form action="/uploadOpen" method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+     </form>
+    </div>
+    
+  </div>
+  
+  
+  
+ <div class="shadow-lg p-3 mb-5 bg-white rounded">
+  <label class="input-group-text" for="uploadClosedDiv">Import closed positions</label>
+  
+  
+    <div class="row" id= "uploadClosedDiv">
+     <form action="/uploadClosed" method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    </div>
+    
+  </div>
+  
+
+
+
+
+ {% include "body.html" %}
+ 
+</body>
+
+
+
+</html>
+

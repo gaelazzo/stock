@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+
+<head>
+
+{% include "head.html" %}
+</head>
+
+<body>
+
+ {% include "navbar.html" %}
+ 
+ <div class="container">
+ <div class = "row">
+  <div class="col-2">
+ 
+       <div class="dropdown show">
+            <a class="btn btn-secondary dropdown-toggle"  role="button" id="dropDownStocks" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Stocks
+            </a>
+              
+            <div class="dropdown-menu" aria-labelledby="dropDownStocks">
+            {% for stock in stocks %}    
+               <li>
+                   <a class="dropdown-item clickStock" >{{stock.bloomberg}}</a>
+               </li>
+            {% endfor %}
+               
+            </div> <!---  dropdown menu  -->
+            
+     </div><!---  dropdown show  -->
+  </div> <!--- col-2  -->
+
+  <div class="col-2">
+            <div class="dropdown show">
+                  <a class="btn btn-secondary dropdown-toggle"  role="button" id="dropDownPortfolio" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Portfolio
+                  </a>
+        
+                  <div class="dropdown-menu" aria-labelledby="dropDownPortfolio">
+                  {% for stock in portfolio %}    
+                     <li>
+                        <a class="dropdown-item clickStock">{{stock.bloomberg}}</a>
+                     </li>
+                  {% endfor %}
+                     
+                 </div>
+             </div> <!--- dropdown show     -->
+           </div> <!--- col-2 -->
+
+
+ <div class="col-2">
+     <p class="float-end"><label for="bloombergCode" class="form-label">Bloomberg code</label> </p>   
+ </div>
+ 
+<div class="col-2">
+     <p class="float-start">
+       <input type="text" class="form-control" value="{{bloomberg}}" id="bloombergCode">
+     </p>
+ </div>
+
+ 
+ <div class="col-1">
+  <button type="button" id = "btnDraw" class="btn btn-primary">Draw</button>
+ </div> 
+
+ 
+ 
+ 
+ <div class="col-md-4">
+ </div>
+  
+</div> <!--- row   -->
+
+
+<div class"row">
+<div class="border border-primary">
+
+            
+             
+                     Frequency
+                    <div class="form-check form-check-inline" id= "frequency">
+                      
+                      {% set freq =  ["1m","5m", "15m", "30m", "45m", "1h","5h", "1d", "1wk", "1mo"]  %}
+                      {% for c in range(freq|length)  %}           
+                        <input type="radio" class="btn-check adjustPeriod" data-value="{{freq[c]}}" name="frequency" id="frequency{{c}}" autocomplete="off" {% if _freq==freq[c] %} checked {% endif %}>
+                        <label class="btn btn-secondary" for="frequency{{c}}">{{freq[c]}}</label>
+                      {% endfor %}          
+                    </div>  
+            
+
+     
+                     Period
+                     <div class="form-check form-check-inline"  id= "period">
+                      
+                      {% set period = ["1d","1wk", "1mo", "1y", "3y","5y", "10y", "max"] %}
+                      {% for c in range(period|length)   %}
+                       
+                        <input type="radio" class="btn-check adjustFrequency" data-value="{{period[c]}}" name="period" id="period{{c}}" autocomplete="off" {% if _period==period[c] %} checked {% endif %}>
+                        <label class="btn btn-secondary" for="period{{c}}">{{period[c]}}</label>
+
+                      {% endfor %}          
+                    </div>  
+                    
+                    
+ <div id="chart" class="chart">
+        </div>
+        
+</div>            
+
+</div>
+        
+</div> <!--- row   -->
+
+
+
+
+</div> <!--- container   -->
+
+
+
+ {% include "body.html" %}
+ 
+ <script>
+ $(".clickStock").click(function(){
+         $("#bloombergCode").val(this.innerText)
+         drawGraph();
+ });
+
+ let frequency= "{{_freq }}"
+ let period= "{{_period }}"
+
+ $(".adjustFrequency").click(adjustFrequency);
+ 
+ $(".adjustPeriod").click(adjustPeriod);
+ let running=false;
+ function setFrequency(f){
+      frequency=f;
+      $('#frequency > .btn-check' ).each(function(){ //:checked
+                let ff= $(this).data("value")
+                if (ff==f){
+                    $(this).click()
+                }
+            });
+ }
+
+ function setPeriod(p){
+     period=p;
+     $('#period > .btn-check' ).each(function(){
+                let pp= $(this).data("value")
+                if (period==pp){
+                    $(this).click()
+                }
+            });
+ }
+
+/* period =["1d","1wk", "1mo", "1y", "3y","5y", "10y", "max"]  */
+ function adjustPeriod(){
+     if (running) return;
+     running=true;
+     frequency = $(this).data("value")
+     //map frequency => default period
+     let map = {"1m":"1h",
+            "5m":"4h",
+            "15m":"2d",
+            "30m":"4d",
+            "45m":"6d",
+            "1h":"8d",
+            "4h":"1mo",
+            "5h":"2mo",
+            "1d":"3mo",
+            "1wk":"1y",            
+            "1mo":"5y"
+     }
+     setPeriod(map[frequency]);
+     running=false;
+     drawGraph();
+ }
+
+/* ["1m","5m", "15m", "30m", "45m", "1h", "1d", "5d", "1wk", "1mo"] */
+
+ function adjustFrequency(){
+     if (running) return;
+     running=true;
+     period = $(this).data("value")
+       //map period  => default frequency
+     let map = {"1d":"10m",
+            "1wk":"1h",
+            "1mo":"5h",
+            "1y":"1wk",
+            "3y":"2wk",
+            "5y":"1mo",
+            "10y":"1mo",
+            "max":"1mo"
+     }
+
+     setFrequency(map[period]);
+     running=false;
+    drawGraph();
+ }
+ 
+ async function drawGraph() {
+    let sym= $("#bloombergCode").val()
+    /*
+    let freq = 'q';
+            $('#frequency > .btn-check:checked' ).each(function(){
+                frequency= $(this).data("value")
+            }); 
+            //
+    
+    let period = 'q';
+            $('#period > .btn-check:checked' ).each(function(){
+                period=  $(this).data("value")
+            });
+    */
+    if (sym !== "" &&  frequency!=="null" && period!=="null"){
+        let response = await fetch("/data/graph?bloomberg=" + sym + "&period=" + period + "&freq=" + frequency);
+        if (response.ok) {
+                let chartJson = await response.json();
+                //$("#txtJson").text(JSON.stringify(chartJson));
+                //console.log(chartJson)
+                //chartJson.data[0].type = "candlestick"
+                Plotly.newPlot('chart', chartJson, {});
+        /* https://projectcodeed.blogspot.com/2021/07/how-to-build-stock-tracker-with-plotly.html*/
+
+        //window.open("graph?bloomberg="+sym+"&freq="+frequency+"&period="+period,"_self");
+        }
+    }
+}
+
+ $("#btnDraw").click(drawGraph);
+
+
+ drawGraph();
+
+</script>
+
+</body>
+
+
+
+</html>
