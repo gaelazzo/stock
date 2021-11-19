@@ -65,21 +65,21 @@ patternList = {
 }
 
 hotPatterns = {
-     'CDLDOJISTAR' : 'Doji Star',
-     'CDL3INSIDE' : 'Three Inside Up/Down',
-     'CDLDOJISTAR' : 'Doji Star',
+    'CDLDOJISTAR' : 'Doji Star',
+    'CDL3INSIDE' : 'Three Inside Up/Down',
+    'CDLDOJISTAR' : 'Doji Star',
     'CDLDRAGONFLYDOJI' : 'Dragonfly Doji',
     'CDLENGULFING' : 'Engulfing Pattern',
     'CDLEVENINGDOJISTAR' : 'Evening Doji Star',
     'CDLEVENINGSTAR' : 'Evening Star',
-      'CDLGRAVESTONEDOJI' : 'Gravestone Doji',
+    'CDLGRAVESTONEDOJI' : 'Gravestone Doji',
     'CDLHAMMER' : 'Hammer',
-    'CDLHANGINGMAN' : 'Hanging Man',
-    'CDLHARAMI' : 'Harami Pattern',
-    'CDLHARAMICROSS' : 'Harami Cross Pattern',
-     'CDLSHOOTINGSTAR' : 'Shooting Star',
-     'CDLMORNINGDOJISTAR' : 'Morning Doji Star',
+    'CDLSHOOTINGSTAR' : 'Shooting Star',
+    'CDLMORNINGDOJISTAR' : 'Morning Doji Star',
     'CDLMORNINGSTAR' : 'Morning Star',
+    'CDL3INSIDE': 'Three Inside Up/Down',
+    'CDL3LINESTRIKE': 'Three-Line Strike',
+    'CDL3OUTSIDE': 'Three Outside Up/Down'
     }
 
 

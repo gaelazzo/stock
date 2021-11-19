@@ -13,20 +13,22 @@
  <div class="container">
  <div class = "row">
   <div class="col-2">
- 
+
        <div class="dropdown show">
             <a class="btn btn-secondary dropdown-toggle"  role="button" id="dropDownStocks" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Stocks
             </a>
               
-            <div class="dropdown-menu" aria-labelledby="dropDownStocks">
+
+                 <ul class="dropdown-menu" aria-labelledby="dropDownStocks">
             {% for stock in stocks %}    
                <li>
                    <a class="dropdown-item clickStock" >{{stock.bloomberg}}</a>
                </li>
             {% endfor %}
+                 </ul>
                
-            </div> <!---  dropdown menu  -->
+
             
      </div><!---  dropdown show  -->
   </div> <!--- col-2  -->
@@ -37,14 +39,15 @@
                     Portfolio
                   </a>
         
-                  <div class="dropdown-menu" aria-labelledby="dropDownPortfolio">
+                  <ul class="dropdown-menu" aria-labelledby="dropDownPortfolio">
+
                   {% for stock in portfolio %}    
                      <li>
                         <a class="dropdown-item clickStock">{{stock.bloomberg}}</a>
                      </li>
                   {% endfor %}
-                     
-                 </div>
+
+                 </ul>
              </div> <!--- dropdown show     -->
            </div> <!--- col-2 -->
 
@@ -73,7 +76,7 @@
 </div> <!--- row   -->
 
 
-<div class"row">
+<div class = "row">
 <div class="border border-primary">
 
             
@@ -142,6 +145,7 @@
                     $(this).click()
                 }
             });
+
  }
 
  function setPeriod(p){
@@ -152,6 +156,8 @@
                     $(this).click()
                 }
             });
+
+
  }
 
 /* period =["1d","1wk", "1mo", "1y", "3y","5y", "10y", "max"]  */
@@ -174,6 +180,7 @@
      }
      setPeriod(map[frequency]);
      running=false;
+     window.history.replaceState({}, document.title, "/" + "graph.html?bloomberg="+$("#bloombergCode").val()+"&frequency="+frequency)
      drawGraph();
  }
 
@@ -196,7 +203,12 @@
 
      setFrequency(map[period]);
      running=false;
-    drawGraph();
+     //https://stackoverflow.com/questions/22753052/remove-url-parameters-without-refreshing-page
+     //1- The pushState() method if you want to add a new modified URL to history entries.
+     //2- The replaceState() method if you want to update/replace current history entry.
+
+     window.history.replaceState({}, document.title, "/" + "graph.html?bloomberg="+$("#bloombergCode").val()+"&period="+period)
+     drawGraph();
  }
  
  async function drawGraph() {
@@ -230,8 +242,25 @@
 
  $("#btnDraw").click(drawGraph);
 
+ $( ()=>{
 
- drawGraph();
+    let searchParams = new URLSearchParams(window.location.search)
+
+    if (searchParams.has("bloomberg")){
+        $("#bloombergCode").val(searchParams.get("bloomberg"))
+    }
+    if (searchParams.has("frequency")){
+        setFrequency(searchParams.get("frequency"))
+        return
+    }
+
+    if (searchParams.has("period")){
+        setPeriod(searchParams.get("period"))
+        return
+    }
+
+     drawGraph();
+  })
 
 </script>
 

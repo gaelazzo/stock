@@ -6,26 +6,11 @@ Created on Mon Aug 30 10:43:07 2021
 """
 
 
-import tickers;
-import yfinance as yf
-
 from datetime import datetime, timedelta
-import os.path
 import csv
-import urllib.request
-import requests
-from bs4 import BeautifulSoup
-from lxml import html
-import pandas as pd
-import talib
-import  tickers as tk;
-import sys
-import os
-import logging
-import io
-from operator import itemgetter, attrgetter
+import  tickers as tk
+
 from commissionCalculator import CommissionCalculator
-from stockValues import getStockTechnical
 from dateutil.relativedelta import relativedelta
 from datetime import date
 import dataretriever as retriever
@@ -104,8 +89,8 @@ def reloadOpenPositions():
             commCalc.incOperation(row["buydate"])
             totalBuy = row["buyprice"]*float(row["q"])
             
-            if (row["buydate"].date()<date.today()
-                and m["kind"]=="E"  and m["etf"]=="N"):
+            if (row["buydate"].date() < date.today()
+                and m["kind"] == "E" and m["etf"] == "N"):
                     row["tobin"]= round(totalBuy*0.001,2)            
             
             

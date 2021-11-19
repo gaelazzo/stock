@@ -28,7 +28,7 @@
      {% for stock in stocks %}          
       <tr>
       <td>{{ stock.reuters }}</td>
-      <td>{{ stock.name }}</td>
+      <td><a href="graph?bloomberg={{stock.bloomberg}}&frequency=1d" target="_blank">{{ stock.name }}</a> </td>
       <td><a href="https://it.finance.yahoo.com/quote/{{stock.bloomberg}}?p={{stock.bloomberg}}" target="_blank" rel="noopener noreferrer">{{stock.bloomberg}}</a> </td>
       <td><a href="{{stock.borsaitaliana}}" target="_blank" rel="noopener noreferrer">{{stock.reuters}}</a> </td>
       <td>{{ stock.patternsBullish }} </td>
