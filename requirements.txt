@@ -11,3 +11,10 @@ matplotlib
 seaborn
 plotly
 numpy
+backtrader
+gym
+pyglet
+AlphaVantage
+pandas_ta
+tensorflow
+tensorflow_datasets

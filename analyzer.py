@@ -109,12 +109,14 @@ def evaluateTickerData(bloomberg, period, interval,
     df["profitLossInfo"] = None
     df["profitLossBB"] = None
     df["profitLossInfoBB"] = None
+    df["profitLossSimple"] = None
+    df["profitLossSimpleInfo"] = None
     # df["profitLoss2"]=None
     # df["profitLossInfo2"]=None
     # df["stopLoss"]=None
     # df["takeProfit"]=None
     # df["subIndexTaken"]=None
-    # df["rifValue"]=None
+    df["rifValue"] = None
 
     for i in range(len(df) - 1):
         idx = df.index[i]
@@ -132,13 +134,17 @@ def evaluateTickerData(bloomberg, period, interval,
         df["profitLossBB"].at[idx] = result
         df["profitLossInfoBB"].at[idx] = additionalInfo
 
+        result, additionalInfo = closeNextDay(subDF, rifValue)
+        df["profitLossSimple"].at[idx] = result
+        df["profitLossSimpleInfo"].at[idx] = additionalInfo
+
         # rifValue = subDF["Open"].at[subDF.index[0]] ##suppose to buy at market price next period
         # stopLoss = subDF["BBlow"]
         # takeProfit = subDF["BBhigh"]
 
         # result, additionalInfo = strategyLimits(subDF,bloomberg,subDF.index[0],stop,interval, stopLoss,takeProfit)
         # # df["stopLoss"].at[idx]=round(stopLoss,2) # df["subIndexTaken"].at[idx]=subDF.index[0]
-        # # df["rifValue"].at[idx]=rifValue
+        df["rifValue"].at[idx]=rifValue
         # # df["takeProfit"].at[idx]=round(takeProfit,2)
         # df["profitLoss2"].at[idx]=result
         # df["profitLossInfo2"].at[idx]=additionalInfo
@@ -349,16 +355,20 @@ def tryClassifyAll():
     best = None
     bestPrecision = 0
 
-    for _interval in ["1d","1wk","1h"]:
-        createSampleTestDataSet(interval=_interval, patternsToCalc=patterns.patternList)
+    # for _interval in ["1d","1wk","1h"]:
+    #     createSampleTestDataSet(interval=_interval, patternsToCalc=patterns.patternList)
 
     for _interval in ["1d", "1wk", "1h"]:
+        sample = pd.read_csv(f"data/sampleData{_interval}.csv")
+        test = pd.read_csv(f"data/testData{_interval}.csv")
         for pt in patterns.patternList:
-            for field in [ "profitLossBB"]:  #"profitLoss",
+            for field in ["profitLossBB", "profitLossSimple", "profitLoss"]:  #"profitLoss",
                 res = tryClassify(fieldProfitLoss=field,
                                   interval=_interval,
                                   patterns=[pt],
-                                  plotGraph=False
+                                  plotGraph=False,
+                                  sample=sample.copy(),
+                                  test=test.copy()
                                   )
                 if res is None:
                     continue
@@ -375,9 +385,14 @@ def tryClassifyAll():
 
 def tryClassify(fieldProfitLoss, interval="1d",
                 patterns=["CDLENGULFING"],
-                plotGraph=True):
-    sample = pd.read_csv(f"data/sampleData{interval}.csv")
-    test = pd.read_csv(f"data/testData{interval}.csv")
+                plotGraph=True,
+                test=None,
+                sample=None
+                ):
+    if sample is None:
+        sample = pd.read_csv(f"data/sampleData{interval}.csv")
+    if test is None:
+        test = pd.read_csv(f"data/testData{interval}.csv")
     print(f"tryClassify {fieldProfitLoss} {interval} {patterns}")
     return classify(sample,
                     test,
@@ -849,6 +864,7 @@ def cleanDataFrameNoCategory(df):
 
     d["profitLoss"] = d["profitLoss"].astype('int')
     d["profitLossBB"] = d["profitLossBB"].astype('int')
+    d["profitLossSimple"] = d["profitLossSimple"].astype('int')
 
     d.reset_index(drop=True, inplace=True)
 
@@ -1120,14 +1136,14 @@ def fixedLimits(df, bloomberg, start, stop, frequency, stopLoss, takeProfit):
         loss = (r["Low"] <= stopLoss)
         if profit and not loss:
             return 1, f"High on {idx} cause {round(r['High'], 4)}>{round(takeProfit, 2)}, sl={round(stopLoss, 2)}"
-        if (loss and not profit):
+        if loss and not profit:
             return -1, f"Low on {idx} cause {round(r['Low'], 4)}<{round(stopLoss, 2)}, tp={round(takeProfit, 2)}"
-        if (not loss and (r["Close"] >= takeProfit)):
+        if not loss and (r["Close"] >= takeProfit):
             return 1, f"Close on {idx} cause {r['Close']} > {round(takeProfit, 2)}, sl={round(stopLoss, 2)}"
         # if (not profit and (r["Close"]<=stopLimit)): return (1,f"Close on {idx} is {r['Close']} > {round(profitlimit,2)}, sl={round(stoplimit,2)}")
 
-        if (loss and profit):
-            return (0, f"Loss and profit on {idx}  out of  ({stopLoss}) and  {takeProfit}")
+        if loss and profit:
+            return 0, f"Loss and profit on {idx}  out of  ({stopLoss}) and  {takeProfit}"
             # mapFrequency = {"1mo": "1wk", "1wk": "1d", "1d": None, "1h":None}
             # newFreq = mapFrequency[frequency]
             # if newFreq == None: return (None,
@@ -1137,14 +1153,19 @@ def fixedLimits(df, bloomberg, start, stop, frequency, stopLoss, takeProfit):
             # df = dr.getDataRange(bloomberg, start, stop, newFreq)
             # return fixedLimits(df, bloomberg, start, stop, newFreq, stopLoss, takeProfit)
 
-    return (0, "No action")  # no take profit and not stop loss
+    return 0, "No action"  # no take profit and not stop loss
 
+def closeNextDay(df, rifValue):
+    firstRow = df.iloc[0]
+    if firstRow["Close"] > rifValue:
+        return 1, f"Close {firstRow['Close']} > {rifValue}"
+    return -1, f"Close {firstRow['Close']} < {rifValue}"
 
 def bollingerLimits(df, bloomberg, start, stop, frequency):
     """
     Starting from first row of dataframe, searches first row where close price reaches a limit of bollinger band
         and returns -1 if it reaches lower limit BBlow, or +1 if it reaches high limit BBup
-        Returns 0 if it's not possible to detect the answer
+        Returns 0 if it's not possible to evaluate the answer
     Sets
     Parameters
     ----------
@@ -1157,10 +1178,7 @@ def bollingerLimits(df, bloomberg, start, stop, frequency):
         interval date stop.
     frequency : string
         frequency considered, one of 1mo 1wk 1d
-    stopLoss : float
-        stop loss value
-    takeProfit : TYPE
-        take profit value
+
 
     Returns
     -------
@@ -1170,40 +1188,31 @@ def bollingerLimits(df, bloomberg, start, stop, frequency):
         detail on what happened
 
     """
-    # print(f"start={start}, stop={stop}")
-    # print(f"real start = {df.index[0]}")
-    # print(f"real stop = {df.index[-1]}")
+
     first = True
     for idx, r in df.iterrows():
         if first:
             first = False
-            if r["Open"] <= r['BBlow']: return (0, f"Opening ({r['Open']})is less than BBlow {r['BBlow']}")
-            if r["Open"] >= r['BBup']: return (0, f"Opening ({r['Open']})is greater than BBup {r['BBup']}")
+            if r["Open"] <= r['BBlow']:
+                return 0, f"Opening ({r['Open']})is less than BBlow {r['BBlow']}"
+            if r["Open"] >= r['BBup']:
+                return 0, f"Opening ({r['Open']})is greater than BBup {r['BBup']}"
 
         bbUp = r["BBup"]
         bbLow = r["BBlow"]
         profit = (r["High"] > bbUp)
         loss = (r["Low"] < bbLow)
         if profit and not loss:
-            return (1, f"High on {idx} cause {round(r['High'], 4)}>{round(bbUp, 2)}, sl={round(bbLow, 2)}")
-        if (loss and not profit):
-            return (-1, f"Low on {idx} cause {round(r['Low'], 4)}<{round(bbLow, 2)}, tp={round(bbUp, 2)}")
-        if (not loss and (r["Close"] >= bbUp)):
-            return (1, f"Close on {idx} cause {r['Close']} > {round(bbUp, 2)}, sl={round(bbLow, 2)}")
-        # if (not profit and (r["Close"]<=stopLimit)): return (1,f"Close on {idx} is {r['Close']} > {round(profitlimit,2)}, sl={round(stoplimit,2)}")
+            return 1, f"High on {idx} cause {round(r['High'], 4)}>{round(bbUp, 2)}, sl={round(bbLow, 2)}"
+        if loss and not profit:
+            return -1, f"Low on {idx} cause {round(r['Low'], 4)}<{round(bbLow, 2)}, tp={round(bbUp, 2)}"
+        if not loss and (r["Close"] >= bbUp):
+            return 1, f"Close on {idx} cause {r['Close']} > {round(bbUp, 2)}, sl={round(bbLow, 2)}"
 
-        if (loss and profit):
-            return (0, f"Loss and profit on {idx}  out of  ({r['BBlow']}) and  {r['BBup']}")
-            # mapFrequency = {"1mo": "1wk", "1wk": "1d", "1d": None, "1h": None}
-            # newFreq = mapFrequency[frequency]
-            # if newFreq == None: return (None,
-            #                             f"profit and loss on {idx}: {r['High']}and {r['Low']}, "
-            #                             f"sl={round(bbLow, 2)}, "
-            #                             f"tp={round(bbUp, 2)}")
-            # df = dr.getDataRange(bloomberg, start, stop, newFreq)
-            # return bollingerLimits(df, bloomberg, start, stop, newFreq)
+        if loss and profit:
+            return 0, f"Loss and profit on {idx}  out of  ({r['BBlow']}) and  {r['BBup']}"
 
-    return (0, "No action")  # no take profit and not stop loss
+    return 0, "No action"  # no take profit and not stop loss
 
 
 reload()

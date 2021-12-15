@@ -167,8 +167,8 @@ def getLastPrices(tickers):
             text = html.decode()
             closeStr = StringAfterPattern(text, "closing price", "P6K39c");
             close = float(closeStr.replace(",", ".").replace("€", "").strip())
-            prevClose[symbol] = close;
-            cachedPrevClose[symbol] = close;
+            prevClose[symbol] = close
+            cachedPrevClose[symbol] = close
 
     return {"currPrices": currPrices, "prevClose": prevClose}
 
@@ -616,8 +616,8 @@ def subtractPeriod(d, period, hoursPerDay):
       one of  ["1h", "4h","12h", "1d","2d","3d","4d","6d", "8d", "15d", 
                               "1wk", "1mo", "2mo", "3mo","6mo", "1y", "3y","5y", "10y", "max"] 
         "max" is an alias for 30y
-    hoursPerDay : TYPE
-        DESCRIPTION.
+    hoursPerDay : float
+        How many hours for a working day
 
     Raises
     ------
@@ -769,7 +769,7 @@ def evaluateDateRange(bloomberg, period, interval, end, bufferLen, hoursPerDay):
         last day of the interval requested
     bufferLen : int
         number of working days to be read
-    hoursPerDay : int
+    hoursPerDay : float
         hours per day to consider
 
     Returns
@@ -933,10 +933,7 @@ def getHistoryData(bloomberg, period, interval,
 # 2m 5m 15m last 60 days
 # 1h last 730 days
 # 7 days worth of 1m granularity data are allowed to be fetched per request.
-# la granularità 1m è ammessa solo per gli ultimi 7 giorni
 
-# 5m data not available for startTime=1262300400 and endTime=1634908029.
-#  The requested range must be within the last 60 days.
 
 def getDateFromIdx(v, interval):
     if (fitDateType(interval) == "datetime"): return v
@@ -1192,7 +1189,7 @@ def getCachedHistory(bloomberg, start, end, interval):
 
         if (st is None): st = yf.Ticker(bloomberg)
         # print(f" fileStop<end  startToRead{startToRead} end{end}")      
-        adjStart = max(adjustDateForInterval(startToRead, interval), fileStart)
+        adjStart = max(adjustDateForInterval(startToRead, interval), fileStartDate)
 
         adjEnd = adjustDateForInterval(end, interval)
         #print(f"reading {bloomberg} from adjStart:{adjStart} to adjEnd:{adjEnd} interval:{interval}[2]")
