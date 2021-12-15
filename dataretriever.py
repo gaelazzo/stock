@@ -11,6 +11,7 @@ import yfinance as yf
 import certifi
 import os.path
 import csv
+import tickers as tk
 
 import indicators
 
@@ -36,6 +37,32 @@ _datestart = {
 
 }
 
+
+def recalcDateStart():
+    for t in tk.getTickers():
+        bloomberg = t["bloomberg"]
+        fileName = f"{bloomberg}_history_1d.csv"
+        #print(f"fileName is  {fileName} ")
+        filePath = "datasets/" + fileName
+        if not os.path.isfile(filePath):
+            continue
+        df = pd.read_csv(filePath)
+        fixIndex(df,"1d")
+        fileStart = getDateFromIdx(df.index.min(), "1d")  # first day stored in the csv (date or datetime)
+        # print(f"fileStart is  {fileStart} ")
+        fileStartDate = getDate(fileStart)  # first day stored in the csv AS DATE
+        # print(f"fileStartDate is  {fileStartDate} ")
+        newStart = fileStartDate
+        # print(f"Examining {bloomberg} to assign {newStart}")
+
+        if not bloomberg in _datestart:
+            _datestart[bloomberg] = newStart
+
+        # print(f"actual start is {_datestart[bloomberg]}")
+        if newStart < _datestart[bloomberg]:
+            _datestart[bloomberg] = newStart
+
+    saveDateStart()
 
 def reloadDateStart():
     _datestart.clear()
@@ -784,7 +811,7 @@ def evaluateDateRange(bloomberg, period, interval, end, bufferLen, hoursPerDay):
     stop = end
     while not is_business_day(stop):
         stop = stop + timedelta(days=1)
-        print(f"incremented stop to {stop}")
+        # print(f"incremented stop to {stop}")
 
     #stop = stop + timedelta(days=1)
 
@@ -794,13 +821,13 @@ def evaluateDateRange(bloomberg, period, interval, end, bufferLen, hoursPerDay):
     toDecrease = buffer
 
     # skips toDecrease working days
-    start = firstDay  # -  timedelta(days=buffer)
+    start = firstDay #- timedelta(days=buffer)
     start = start - timedelta(days=1)
     while not is_business_day(start):
         start = start - timedelta(days=1)
 
     while toDecrease > 0:
-        if is_business_day(start): toDecrease = toDecrease - 1
+        if not is_business_day(start): toDecrease = toDecrease - 1
         start = start - timedelta(days=1)
 
     # print(f"firstDay={firstDay}, buffer={buffer}, start={start}, stop={stop}")
@@ -830,9 +857,12 @@ def adjustDateForNoData(date, bloomberg):
 
     """
     if bloomberg not in _datestart:
+        # print(f"{bloomberg} not in _datestart")
         return date
     if toDate(date) < _datestart[bloomberg]:
+        # print(f"toDate({date}) < {_datestart[bloomberg]}")
         return _datestart[bloomberg]
+    # print(f"returning {toDate(date)}")
     return toDate(date)
 
 
@@ -872,7 +902,7 @@ def getHistoryData(bloomberg, period, interval,
     if endDate is None:
         endDate = datetime.today().date() + timedelta(days=1)
 
-    # print(f"today = {today}")
+    #print(f"endDate = {endDate}")
 
     hoursPerDay = 8.5  # those should be evalued basing on bloomberg code
     bufferLen = 25  # those should be evalued basing on bloomberg code
@@ -880,7 +910,7 @@ def getHistoryData(bloomberg, period, interval,
     start, stop = evaluateDateRange(bloomberg, period, interval, endDate, bufferLen, hoursPerDay)
 
 
-    #print(f"start: {start}, stop:{stop}")
+    # print(f"start: {start}, stop:{stop}")
 
     df = getDataRange(bloomberg, start, stop, interval)
     # print(f"{len(df)} rows read")
@@ -1008,6 +1038,26 @@ def deleteUnsecureLastRow(df, interval):
     #print("One row removed")
     return df.drop(df.tail(1).index)  # drop last 1 rows
 
+def fixIndex(dataFrame, interval):
+        indexName = getNameForIndex(interval)
+        if dataFrame.index.name is None:
+            # print(f"dataFrame.index.name is None")
+            if indexName in dataFrame.columns:
+                fitColumnType(dataFrame, indexName, interval)
+                # print(f"fixing column type")
+                dataFrame.set_index(indexName, inplace=True)
+            else:
+                # print(f"fixing index type")
+                if fitDateType(interval) == "date":
+                    dataFrame.index = pd.to_datetime(dataFrame.index).date
+                # print(f"{df.index}")
+            if dataFrame.index.name is None:
+                dataFrame.index.name = indexName
+        else:
+            # print(f"dataFrame.index.name is not None")
+            if fitDateType(interval) == "date":
+                dataFrame.index = pd.to_datetime(dataFrame.index).date
+                dataFrame.index.name = indexName
 
 # interval admitted 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 def getCachedHistory(bloomberg, start, end, interval):
@@ -1032,32 +1082,13 @@ def getCachedHistory(bloomberg, start, end, interval):
 
     """
 
-    def fixIndex(dataFrame, interval):
-        indexName = getNameForIndex(interval)
-        if dataFrame.index.name is None:
-            # print(f"dataFrame.index.name is None")
-            if indexName in dataFrame.columns:
-                fitColumnType(dataFrame, indexName, interval)
-                # print(f"fixing column type")
-                dataFrame.set_index(indexName, inplace=True)
-            else:
-                # print(f"fixing index type")
-                if fitDateType(interval) == "date":
-                    dataFrame.index = pd.to_datetime(dataFrame.index).date
-                # print(f"{df.index}")
-            if dataFrame.index.name is None:
-                dataFrame.index.name = indexName
-        else:
-            # print(f"dataFrame.index.name is not None")
-            if fitDateType(interval) == "date":
-                dataFrame.index = pd.to_datetime(dataFrame.index).date
-                dataFrame.index.name = indexName
+
 
     today = datetime.today().date()
     fileName = f"{bloomberg}_history_{interval}.csv"
-    filePath = "datasets/" + fileName;
+    filePath = "datasets/" + fileName
     st = None
-    indexName = getNameForIndex(interval)
+
     if (fileName in cachedTickerHistory):
         df = cachedTickerHistory[fileName]
     else:
