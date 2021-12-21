@@ -122,7 +122,7 @@ def evaluateTickerData(bloomberg, period, interval,
         idx = df.index[i]
         subDF = df[i + 1:]  # from row i on
 
-        rifValue = subDF["Open"].at[subDF.index[0]]  ##suppose to buy at market price next period
+        rifValue = subDF["Open"].at[subDF.index[0]]  # suppose to buy at market price next period
         stopLoss = rifValue * ((100 - stopLossPerc) / 100)
         takeProfit = rifValue * ((100 + takeProfitPerc) / 100)
 

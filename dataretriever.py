@@ -47,7 +47,7 @@ def recalcDateStart():
         if not os.path.isfile(filePath):
             continue
         df = pd.read_csv(filePath)
-        fixIndex(df,"1d")
+        fixIndex(df, "1d")
         fileStart = getDateFromIdx(df.index.min(), "1d")  # first day stored in the csv (date or datetime)
         # print(f"fileStart is  {fileStart} ")
         fileStartDate = getDate(fileStart)  # first day stored in the csv AS DATE
@@ -113,12 +113,12 @@ def StringAfterPattern(text, tag1, tag2):
 
     """
 
-    posPattern = text.find(tag1);
-    posBeforeValuePattern = text.find(tag2, posPattern);
-    posValuePattern = text.find(">", posBeforeValuePattern) + 1;
-    posStopValuePattern = text.find("<", posValuePattern);
-    strPattern = text[posValuePattern:posStopValuePattern];
-    return strPattern;
+    posPattern = text.find(tag1)
+    posBeforeValuePattern = text.find(tag2, posPattern)
+    posValuePattern = text.find(">", posBeforeValuePattern) + 1
+    posStopValuePattern = text.find("<", posValuePattern)
+    strPattern = text[posValuePattern:posStopValuePattern]
+    return strPattern
 
 
 def getLastPrices(tickers):
@@ -136,7 +136,7 @@ def getLastPrices(tickers):
         {"currPrices":{ticker:value}, "prevClose":{ticker:value}}
 
     """
-    if (len(tickers) == 0):
+    if len(tickers) == 0:
         return {"currPrices": {}, "prevClose": {}}
     # data = yhf(tickers);
     # currPrices  = data.get_current_price();
@@ -406,9 +406,9 @@ allowedInterval = ["1m", "2m", "5m", "10m", "15m", "30m", "45m", "60m", "90m",
 
 def adjustDateForInterval(d, interval):
     """
-    Yahoo does not allow to fetch too-ancient data for some intervals,
+    Yahoo does not allow to fetch too-ancient data for some interval type,
      so this function checks those limits and when the Date is out of range
-     it is changed to the minimum value allowd for that interval
+     it is changed to the minimum value allowed for that interval
 
     Parameters
     ----------
@@ -429,17 +429,17 @@ def adjustDateForInterval(d, interval):
 
     # 7 days worth of 1m granularity data are allowed to be fetched per request.
     # la granularità 1m è ammessa solo per gli ultimi 7 giorni
-    if (interval == "1m" and diffDay > 7):
+    if interval == "1m" and diffDay > 7:
         return today - timedelta(days=7)
 
-    if (interval == "5m" and diffDay > 60):
+    if interval == "5m" and diffDay > 60:
         return today - timedelta(days=60)
 
-    if (interval == "1h" and diffDay >= 729):
+    if interval == "1h" and diffDay >= 729:
         return today - timedelta(days=729)
 
-    if (interval.endswith("wk")):
-        while (d.weekday() != 0):
+    if interval.endswith("wk"):
+        while d.weekday() != 0:
             d = d - timedelta(days=1)
             # print(f"decremented {start.strftime('%Y-%m-%d')}")
         return d
@@ -463,7 +463,7 @@ def fixMonthLastDay(df):
 
     """
 
-    if (len(df.index) < 2): return df
+    if len(df.index) < 2: return df
 
     nElement = len(df.index)
     lastIdx = df.index[nElement - 1]
@@ -477,7 +477,6 @@ def fixMonthLastDay(df):
     dfc = df.copy()
     low = dfc["Low"][nElement - 2]
     high = dfc["High"][nElement - 2]
-    volume = dfc["Volume"][nElement - 2]
     volume = dfc["Volume"][nElement - 2]
     div = dfc["Dividends"][nElement - 2]
 
@@ -502,6 +501,7 @@ def toDate(d):
     if hasattr(d, "date") and callable(getattr(d, "date")):
         return d.date()
     return d
+
 
 def getDataRange(bloomberg, start, end, interval):
     """
@@ -537,16 +537,15 @@ def getDataRange(bloomberg, start, end, interval):
     end = toDate(end)
     # if (hasattr(start, "date") and callable(getattr(start, "date"))): start = start.date()
     # if (hasattr(end, "date") and callable(getattr(end, "date"))):  end = end.date()
-    if (not isinstance(start, date)): raise Exception("getDataRange",
-                                                      f"start must be a date (not a {type(start)})")
-    if (not isinstance(end, date)): raise Exception("getDataRange",
-                                                    f"end must be a date (not a {type(end)})")
+    if not isinstance(start, date): raise Exception("getDataRange",
+                                                    f"start must be a date (not a {type(start)})")
+    if not isinstance(end, date): raise Exception("getDataRange",
+                                                  f"end must be a date (not a {type(end)})")
 
-    if (interval not in allowedInterval):
+    if interval not in allowedInterval:
         raise Exception("getDataRange", "interval must be between " + str(allowedInterval))
 
     start = adjustDateForNoData(start, bloomberg)
-    adapter = None
     factor = None
     intervalToUse = interval
     if interval in IntervalAdapters:
@@ -559,7 +558,7 @@ def getDataRange(bloomberg, start, end, interval):
     # print(f"intervalToUse: {intervalToUse}")
     df = getCachedHistory(bloomberg=bloomberg,
                           start=adjustDateForInterval(start, intervalToUse),
-                          end=adjustDateForInterval(end, intervalToUse), #end
+                          end=adjustDateForInterval(end, intervalToUse), # end
                           interval=intervalToUse)
     # st.history(start=adjustDateForInterval(start,intervalToUse),
     #                     end=end, interval=intervalToUse, back_adjust=False,auto_adjust=False)
@@ -996,12 +995,12 @@ def fitColumnType(df, columnName, interval):
 
 def deleteUnsecureLastRow(df, interval):
     """
-    Remove last row if it is still changing
+    Remove the last row of the dataframe if it is still changing
     Parameters
     ----------
     df : DataFrame       
-    interval : string in 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
-        
+    interval : string
+     one of 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 
     Returns
     -------
@@ -1032,38 +1031,47 @@ def deleteUnsecureLastRow(df, interval):
     # print(f"new maxDateAsDate is {maxDateAsDate}")   
 
     if maxDateAsDate < today:
-        #print("No need to remove")
+        # print("No need to remove")
         return df  # no need to remove last row
 
-    #print("One row removed")
+    # print("One row removed")
     return df.drop(df.tail(1).index)  # drop last 1 rows
 
+
 def fixIndex(dataFrame, interval):
-        indexName = getNameForIndex(interval)
-        if dataFrame.index.name is None:
-            # print(f"dataFrame.index.name is None")
-            if indexName in dataFrame.columns:
-                fitColumnType(dataFrame, indexName, interval)
-                # print(f"fixing column type")
-                dataFrame.set_index(indexName, inplace=True)
-            else:
-                # print(f"fixing index type")
-                if fitDateType(interval) == "date":
-                    dataFrame.index = pd.to_datetime(dataFrame.index).date
-                # print(f"{df.index}")
-            if dataFrame.index.name is None:
-                dataFrame.index.name = indexName
+    """
+    Sets the dataframe index inplace, changing column type from string or whatever to the expected type
+
+    Parameters
+    ----------
+    dataFrame: DataFrame
+    interval: String
+
+    """
+    indexName = getNameForIndex(interval)
+    if dataFrame.index.name is None:
+        # print(f"dataFrame.index.name is None")
+        if indexName in dataFrame.columns:
+            fitColumnType(dataFrame, indexName, interval)
+            # print(f"fixing column type")
+            dataFrame.set_index(indexName, inplace=True)
         else:
-            # print(f"dataFrame.index.name is not None")
+            # print(f"fixing index type")
             if fitDateType(interval) == "date":
                 dataFrame.index = pd.to_datetime(dataFrame.index).date
-                dataFrame.index.name = indexName
+            # print(f"{df.index}")
+        if dataFrame.index.name is None:
+            dataFrame.index.name = indexName
+    else:
+        # print(f"dataFrame.index.name is not None")
+        if fitDateType(interval) == "date":
+            dataFrame.index = pd.to_datetime(dataFrame.index).date
+            dataFrame.index.name = indexName
 
-# interval admitted 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+
 def getCachedHistory(bloomberg, start, end, interval):
     """
-    
-
+    Reads data from yahoo and from saved data when available
     Parameters
     ----------
     bloomberg : string
@@ -1078,18 +1086,16 @@ def getCachedHistory(bloomberg, start, end, interval):
     Returns
     -------
     DataFrame
-        Data retrieved from cache and from yahoo  finance
+        Data retrieved from cache and from yahoo finance
 
     """
-
-
-
     today = datetime.today().date()
     fileName = f"{bloomberg}_history_{interval}.csv"
     filePath = "datasets/" + fileName
     st = None
 
-    if (fileName in cachedTickerHistory):
+    if fileName in cachedTickerHistory:
+        # data is in the cache
         df = cachedTickerHistory[fileName]
     else:
         if not os.path.isfile(filePath):
@@ -1102,7 +1108,7 @@ def getCachedHistory(bloomberg, start, end, interval):
                             interval=interval,
                             back_adjust=False,
                             auto_adjust=False)
-            #print(f"read {len(df)} rows for {bloomberg} from {adjStart} to {adjEnd} with interval {interval}")
+            # print(f"read {len(df)} rows for {bloomberg} from {adjStart} to {adjEnd} with interval {interval}")
             while len(df) == 0:
                 adjStart = adjStart + timedelta(days=30)
                 if adjStart > adjEnd:
@@ -1112,8 +1118,7 @@ def getCachedHistory(bloomberg, start, end, interval):
                                 interval=interval,
                                 back_adjust=False,
                                 auto_adjust=False)
-                #print(f"read {len(df)} rows for {bloomberg} from {adjStart} to {adjEnd} with interval {interval}")
-
+                # print(f"read {len(df)} rows for {bloomberg} from {adjStart} to {adjEnd} with interval {interval}")
 
             fixIndex(df, interval)
             dfToSave = deleteUnsecureLastRow(df, interval)
@@ -1122,13 +1127,10 @@ def getCachedHistory(bloomberg, start, end, interval):
             cachedTickerHistory[fileName] = dfToSave
             return df
 
-    # read existing data
-    # print(f"reading {filePath}")
-    df = pd.read_csv(filePath)  ##,infer_datetime_format=True
-    # print(df)
-    # print(df.index)
-    # print(df.dtypes)
-    fixIndex(df, interval)
+        # read existing data
+        # print(f"reading {filePath}")
+        df = pd.read_csv(filePath)  # ,infer_datetime_format=True
+        fixIndex(df, interval)
 
     # df["Date"] = pd.to_datetime(df["Date"]).dt.date
 
@@ -1146,7 +1148,7 @@ def getCachedHistory(bloomberg, start, end, interval):
     initialFileStop = fileStop    # original fileStop
 
     missingStart = fileStopDate  # first day missing in the csv
-    if (fitDateType(interval)=="date"):
+    if fitDateType(interval) == "date":
         missingStart = missingStart + timedelta(days=1)
 
 
@@ -1154,8 +1156,8 @@ def getCachedHistory(bloomberg, start, end, interval):
 
     # toSave = False
     # integrates missing rows before fileStart
-    if (fileStartDate > start):
-        if (st is None): st = yf.Ticker(bloomberg)
+    if fileStartDate > start:
+        if st is None: st = yf.Ticker(bloomberg)
         startToRead = start  # - timedelta(days=5) #just to be sure
         stopToRead = fileStartDate  # + timedelta(days=1) #just to be sure
         # print(f"{bloomberg} fileStart>start  startToRead{startToRead} stopToRead{stopToRead}  so toSave set to true")
@@ -1169,6 +1171,7 @@ def getCachedHistory(bloomberg, start, end, interval):
                          auto_adjust=False)
         # print(f"got {len(dff)} rows")
         while len(dff) == 0:
+            # go ahead till some data about this ticker is found
             adjStart = adjStart + timedelta(days=20)
             if adjStart > adjEnd:
                 updateFirstTickerDate(fileStartDate, bloomberg)
@@ -1206,13 +1209,13 @@ def getCachedHistory(bloomberg, start, end, interval):
     if idxType == "date" and (missingStart <= end or end >= today):
         endToUpdate = True
 
-    # if data is entirely present don't read anything
+    # if data is entirely in memory don't read anything
     if endToUpdate:
         # data is not entirely present so some data has to be read
         readableStop = end
         # today's stop must never be read or saved so it is not to check
-        if (end > today and idxType == "date"):
-            #print(f"readableStop set to today= {today}")
+        if end > today and idxType == "date":
+            # print(f"readableStop set to today= {today}")
             readableStop = today
 
         startToRead = min(missingStart, end - timedelta(days=1) )
@@ -1223,7 +1226,7 @@ def getCachedHistory(bloomberg, start, end, interval):
         adjStart = max(adjustDateForInterval(startToRead, interval), fileStartDate)
 
         adjEnd = adjustDateForInterval(end, interval)
-        #print(f"reading {bloomberg} from adjStart:{adjStart} to adjEnd:{adjEnd} interval:{interval}[2]")
+        # print(f"reading {bloomberg} from adjStart:{adjStart} to adjEnd:{adjEnd} interval:{interval}[2]")
         try:
             dff = st.history(start=adjStart,
                              end=adjEnd,
@@ -1253,6 +1256,7 @@ def getCachedHistory(bloomberg, start, end, interval):
             fileStopDate = getDate(fileStop)
             # print(f"now2 fileStart {fileStart} from {df.index.min()} fileStop{fileStop} from {df.index.max()}")              
 
+        # Saves data if it is changed
         # removes today before saving data
         dfToSave = deleteUnsecureLastRow(df, interval)
         # dfToSave = df.loc[[index for index,row in df.iterrows() if getDateFromIdx(index)<today]]
@@ -1262,6 +1266,6 @@ def getCachedHistory(bloomberg, start, end, interval):
             cachedTickerHistory[fileName] = dfToSave
             # print(f"now3 fileStart {fileStart} from {initialFileStart} fileStop {fileStop} from {initialFileStop}")              
 
-    # removes extra rows from result
-    dfReturn = df.loc[[index for index, row in df.iterrows() if getDate(index) >= start and getDate(index) < end]]
+    # returns only requested rows
+    dfReturn = df.loc[[index for index, row in df.iterrows() if start <= getDate(index) < end]]
     return dfReturn
